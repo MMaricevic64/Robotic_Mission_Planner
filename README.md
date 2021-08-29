@@ -1,6 +1,6 @@
 Features of project:
 - Google Map loaded using API key
-- Adding Waypoints (markers) on map click, coordinates apears in table
+- Adding Waypoints (markers) on map click, coordinates visible in table
 - Create Polygons from markers coordinates
 - Create Polylines from markers coordinates
 - Delete Waypoints, Polygons, Polylines from map using right-click
