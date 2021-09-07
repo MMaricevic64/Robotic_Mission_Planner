@@ -10,6 +10,6 @@ Features of project:
 Usage requirements:
 - Internet connection to use Bootstrap and Google API CDNs
 - Create you API key at: https://console.cloud.google.com/apis/credentials and then use it in RMP.html file at its bottom
-  In line: ** <script async defer src="https://maps.googleapis.com/maps/api/js?key=API_KEY"></script> ** replace API_KEY with your created API key.
+  In line: ** <script async defer src='https://maps.googleapis.com/maps/api/js?key=API_KEY'></script> ** replace API_KEY with your created API key.
   
 Enjoy :)
