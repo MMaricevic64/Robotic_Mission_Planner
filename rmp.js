@@ -116,7 +116,6 @@ function get_marker_coordinates(){
 }
 
 function create_polygon(){
-  var newpolygon;
   if(markers.length < 3){
     alert("There must be at least 3 markers to create polygon!");
     return;
@@ -124,7 +123,14 @@ function create_polygon(){
 
   //Get polygon coordinates
   var polygon_coordinates = get_marker_coordinates();
+  //Create new polygon
+  create_new_polygon(polygon_coordinates);
+  //Remove markers
+  delete_all_markers();
+}
 
+function create_new_polygon(polygon_coordinates){
+  var newpolygon;
   //Create polygon and add it to map
     newpolygon = new google.maps.Polygon({
       paths: polygon_coordinates,
@@ -146,11 +152,8 @@ function create_polygon(){
 
     polygonID++;
 
-    //Remove markers
-    delete_all_markers();
-
-    //Function to remove polygon
-    newpolygon.addListener("rightclick", function() {
+      //Function to remove polygon
+      newpolygon.addListener("rightclick", function() {
       //Remove polygon from map and polygons array
       newpolygon.setMap(null);
       var index = polygons.indexOf(newpolygon);
@@ -166,22 +169,42 @@ function create_polygon(){
         var position = new google.maps.LatLng(lat,lng);
         add_marker(position);
     });
+}
 
+function delete_all_polygons(){
+    //Delete polygons from map and polygons array
+    for(var i=0; i < polygons.length; i++){
+      polygons[i].setMap(null);
+    }
+    polygons = [];
+
+    //Delete corresponding polygons from DataLayer
+    datalayer.forEach(function (feature){
+        if(feature.getGeometry().getType() == "Polygon"){
+          datalayer.remove(feature);
+        }
+    });
 }
 
 function create_polyline(){
-  var newpolyline;
   if(markers.length < 1){
     alert("There must be at least 2 markers to create polyline!");
     return;
   }
 
   //Get polyline position
-  var polyline_cordinates = get_marker_coordinates();
+  var polyline_coordinates = get_marker_coordinates();
+  //Create new polyline
+  create_new_polyline(polyline_coordinates)
+  //Remove markers
+  delete_all_markers();
+}
 
+function create_new_polyline(polyline_coordinates){
+  var newpolyline;
   //Create polyline and add it to map
     newpolyline = new google.maps.Polyline({
-      path: polyline_cordinates,
+      path: polyline_coordinates,
       geodesic: true,
       strokeColor: "#00FF00",
       strokeWeight: 2,
@@ -200,9 +223,6 @@ function create_polyline(){
   datalayer.add(polyline);
 
   polylineID++;
-
-  //Remove markers
-  delete_all_markers();
 
   //Function to remove polyline
   newpolyline.addListener("rightclick", function() {
@@ -223,17 +243,38 @@ function create_polyline(){
   });
 }
 
+function delete_all_polylines(){
+    //Delete polylines from map and polylines array
+    for(var i=0; i < polylines.length; i++){
+      polylines[i].setMap(null);
+    }
+    polylines = [];
+
+    //Delete corresponding LineStrings from DataLayer
+    datalayer.forEach(function (feature){
+        if(feature.getGeometry().getType() == "LineString"){
+          datalayer.remove(feature);
+        }
+    });
+
+}
 // Load GeoJSON data to map
 function loadGeoJsonString(geoString) {
-  //Empty data layer
-  datalayer.forEach(function (feature){
-    datalayer.remove(feature);
-        });
+  //Clear all elements from map and data layer
+  delete_all_markers();
+  delete_all_polygons();
+  delete_all_polylines();
+  polygonID = 1;
+  polylineID = 1;
+  markerID = 1;
+
   try {
       const geojson = JSON.parse(geoString);
-      datalayer.addGeoJson(geojson);
-      //set_datalayer_on_map(); #TO-DO
-      datalayer.setMap(map);
+      //Create tmp data layer and add all features from .json file to it
+      tmplayer = new google.maps.Data();
+      tmplayer.addGeoJson(geojson);
+      //Create cooresponding points, polylines or polygons for each feature, add it to original data layer and show it on map
+      transform_tmplayer(tmplayer);
       zoom(map);
     } catch (e) {
         alert("Not a GeoJSON file!");
@@ -281,39 +322,39 @@ function loadGeoJsonString(geoString) {
         }
     }
 
-/* ------TO-DO--------*/
-/*function set_datalayer_on_map(){
-  datalayer.forEach(function (feature){
+
+function transform_tmplayer(tmplayer){
+  tmplayer.forEach(function (feature){
       if(feature.getGeometry().getType() == "Point"){
         var position;
         feature.getGeometry().forEachLatLng( function(coordinate){
           position = coordinate;
           console.log(position);
         });
-        add_marker(position, true);
+        add_marker(position);
       }
       if(feature.getGeometry().getType() == "Polygon"){
         var position = [];
         feature.getGeometry().forEachLatLng( function(coordinate){
           position.push(coordinate);
         });
-        //create_polygon()
+        create_new_polygon(position);
       }
       if(feature.getGeometry().getType() == "LineString"){
         var position = [];
         feature.getGeometry().forEachLatLng( function(coordinate){
           position.push(coordinate);
         });
+        create_new_polyline(position);
       }
   });
 }
-*/
 
 function delete_from_data_layer(id, type){
   datalayer.forEach(function (feature){
-      if(feature.getId() == id && feature.getGeometry().getType() == type){
-        datalayer.remove(feature);
-      }
+    if(feature.getId() == id && feature.getGeometry().getType() == type){
+      datalayer.remove(feature);
+    }
   });
 }
 
